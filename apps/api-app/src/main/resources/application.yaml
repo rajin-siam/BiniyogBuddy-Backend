@@ -1,0 +1,35 @@
+spring:
+  application:
+    name: BiniyogBuddy
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/biniyogbuddy
+    driver-class-name: org.postgresql.Driver
+    username: postgres
+    password: mbstusiam
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: create-drop
+    show-sql: false
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+logging:
+  level:
+    root: INFO
+    com.biniyogbuddy: DEBUG
