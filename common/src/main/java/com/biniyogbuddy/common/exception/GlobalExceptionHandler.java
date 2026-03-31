@@ -14,4 +14,16 @@ public class GlobalExceptionHandler {
         ApiResponse<Void> response = new ApiResponse<>(ex.getMessage(), "error", null);
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
+
+    @ExceptionHandler(DuplicateResourceException.class)
+    public ResponseEntity<ApiResponse<Void>> handleDuplicateResourceException(DuplicateResourceException ex) {
+        ApiResponse<Void> response = new ApiResponse<>(ex.getMessage(), "error", null);
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    public ResponseEntity<ApiResponse<Void>> handleInvalidCredentialsException(InvalidCredentialsException ex) {
+        ApiResponse<Void> response = new ApiResponse<>(ex.getMessage(), "error", null);
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
 }
