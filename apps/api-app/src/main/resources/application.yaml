@@ -2,6 +2,10 @@ spring:
   application:
     name: BiniyogBuddy
 
+  messages:
+    basename: messages/auth, messages/general
+    encoding: UTF-8
+
   datasource:
     url: jdbc:postgresql://localhost:5432/biniyogbuddy
     driver-class-name: org.postgresql.Driver
