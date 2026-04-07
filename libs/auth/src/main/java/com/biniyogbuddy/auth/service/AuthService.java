@@ -6,6 +6,7 @@ import com.biniyogbuddy.auth.dto.AuthResponse;
 import com.biniyogbuddy.auth.util.JwtUtil;
 import com.biniyogbuddy.common.exception.DuplicateResourceException;
 import com.biniyogbuddy.common.exception.InvalidCredentialsException;
+import com.biniyogbuddy.common.exception.InvalidTokenException;
 import com.biniyogbuddy.users.entity.ExperienceLevel;
 import com.biniyogbuddy.users.entity.Role;
 import com.biniyogbuddy.users.entity.User;
@@ -25,6 +26,7 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
     private final TokenBlacklistService tokenBlacklistService;
+    private final RefreshTokenService refreshTokenService;
     private final MessageSource messageSource;
 
     @Transactional
@@ -48,7 +50,7 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
-        return new AuthResponse(jwtUtil.generateToken(user));
+        return generateTokenPair(user);
     }
 
     @Transactional(readOnly = true)
@@ -66,13 +68,55 @@ public class AuthService {
             throw new InvalidCredentialsException(invalidCredentialsMessage);
         }
 
-        return new AuthResponse(jwtUtil.generateToken(user));
+        return generateTokenPair(user);
     }
 
-    public void logout(String token) {
-        long ttlSeconds = (jwtUtil.getExpiration(token).getTime() - System.currentTimeMillis()) / 1000;
-        if (ttlSeconds > 0) {
-            tokenBlacklistService.blacklist(token, ttlSeconds);
+    public AuthResponse refresh(String refreshToken) {
+        String invalidRefreshMessage = messageSource.getMessage(
+                "auth.error.refresh.invalid",
+                null,
+                LocaleContextHolder.getLocale()
+        );
+
+        if (!jwtUtil.isTokenValid(refreshToken)) {
+            throw new InvalidTokenException(invalidRefreshMessage);
         }
+
+        if (!"refresh".equals(jwtUtil.extractTokenType(refreshToken))) {
+            throw new InvalidTokenException(invalidRefreshMessage);
+        }
+
+        if (!refreshTokenService.isValid(refreshToken)) {
+            throw new InvalidTokenException(invalidRefreshMessage);
+        }
+
+        // Rotate: delete old refresh token
+        refreshTokenService.delete(refreshToken);
+
+        String email = jwtUtil.extractEmail(refreshToken);
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new InvalidTokenException(invalidRefreshMessage));
+
+        return generateTokenPair(user);
+    }
+
+    public void logout(String accessToken, String refreshToken) {
+        // Blacklist the access token
+        long ttlSeconds = (jwtUtil.getExpiration(accessToken).getTime() - System.currentTimeMillis()) / 1000;
+        if (ttlSeconds > 0) {
+            tokenBlacklistService.blacklist(accessToken, ttlSeconds);
+        }
+
+        // Delete the refresh token from Redis
+        if (refreshToken != null) {
+            refreshTokenService.delete(refreshToken);
+        }
+    }
+
+    private AuthResponse generateTokenPair(User user) {
+        String accessToken = jwtUtil.generateToken(user);
+        String refreshToken = jwtUtil.generateRefreshToken(user);
+        refreshTokenService.store(refreshToken, jwtUtil.getRefreshExpirationMs());
+        return new AuthResponse(accessToken, refreshToken);
     }
 }

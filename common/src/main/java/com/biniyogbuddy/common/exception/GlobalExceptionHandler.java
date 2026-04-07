@@ -30,4 +30,11 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                 .body(new MessageResponse(parsed.message(), null, parsed.errorCode()));
     }
+
+    @ExceptionHandler(InvalidTokenException.class)
+    public ResponseEntity<MessageResponse> handleInvalidTokenException(InvalidTokenException ex) {
+        MessageParser.ParsedMessage parsed = MessageParser.parse(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(new MessageResponse(parsed.message(), null, parsed.errorCode()));
+    }
 }

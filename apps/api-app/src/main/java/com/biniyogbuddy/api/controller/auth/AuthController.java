@@ -3,6 +3,8 @@ package com.biniyogbuddy.api.controller.auth;
 import com.biniyogbuddy.auth.dto.AuthLoginRequest;
 import com.biniyogbuddy.auth.dto.AuthRegisterRequest;
 import com.biniyogbuddy.auth.dto.AuthResponse;
+import com.biniyogbuddy.auth.dto.LogoutRequest;
+import com.biniyogbuddy.auth.dto.RefreshTokenRequest;
 import com.biniyogbuddy.auth.service.AuthService;
 import com.biniyogbuddy.common.dto.ApiResponse;
 import com.biniyogbuddy.common.dto.MessageResponse;
@@ -41,9 +43,17 @@ public class AuthController {
         return ResponseEntity.ok(new ApiResponse<>(message, "success", authResponse));
     }
 
+    @PostMapping("/refresh")
+    public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
+        AuthResponse authResponse = authService.refresh(request.refreshToken());
+        String message = messageSource.getMessage("auth.refresh.success", null, LocaleContextHolder.getLocale());
+        return ResponseEntity.ok(new ApiResponse<>(message, "success", authResponse));
+    }
+
     @PostMapping("/logout")
-    public ResponseEntity<MessageResponse> logout(HttpServletRequest request) {
-        authService.logout(request.getHeader("Authorization").substring(7));
+    public ResponseEntity<MessageResponse> logout(HttpServletRequest request, @Valid @RequestBody LogoutRequest logoutRequest) {
+        String accessToken = request.getHeader("Authorization").substring(7);
+        authService.logout(accessToken, logoutRequest.refreshToken());
         String message = messageSource.getMessage("auth.logout.success", null, LocaleContextHolder.getLocale());
         return ResponseEntity.ok(new MessageResponse(message));
     }
