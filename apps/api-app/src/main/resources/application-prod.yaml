@@ -12,13 +12,30 @@ spring:
     redis:
       url: ${REDIS_URL}
 
+  mail:
+    host: ${MAIL_HOST}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME}
+    password: ${MAIL_PASSWORD}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 server:
   port: ${PORT:8080}
 
 jwt:
   secret: ${JWT_SECRET}
-  expiration-ms: 86400000
-  refresh-expiration-ms: 604800000
+  expiration-ms: 3600000
+  refresh-expiration-ms: 2592000000
+
+app:
+  super-admin:
+    email: ${SUPER_ADMIN_EMAIL}
+    password: ${SUPER_ADMIN_PASSWORD}
 
 logging:
   level:

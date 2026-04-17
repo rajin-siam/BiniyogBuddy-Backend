@@ -2,6 +2,7 @@ package com.biniyogbuddy.users.service;
 
 import com.biniyogbuddy.users.entity.Role;
 import com.biniyogbuddy.users.entity.User;
+import com.biniyogbuddy.users.repository.RoleRepository;
 import com.biniyogbuddy.users.repository.UserRepository;
 import com.biniyogbuddy.users.dto.LoginRequest;
 import com.biniyogbuddy.users.dto.LoginResponse;
@@ -19,14 +20,17 @@ import java.util.Optional;
 public class UserService {
 
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
-
 
     @Transactional
     public UserResponse registerUser(RegisterRequest request) {
         if(userRepository.existsByEmail(request.email())) {
             throw new IllegalArgumentException("Email already registered: " + request.email());
         }
+
+        Role userRole = roleRepository.findByName("ROLE_USER")
+                .orElseThrow(() -> new IllegalStateException("Default role ROLE_USER not found"));
 
         String hashedPassword = passwordEncoder.encode(request.password());
 
@@ -36,7 +40,7 @@ public class UserService {
                 .password(hashedPassword)
                 .fullName(request.fullName())
                 .experienceLevel(request.experienceLevel())
-                .role(Role.ROLE_USER)
+                .role(userRole)
                 .build();
 
         User savedUser = userRepository.save(newUser);

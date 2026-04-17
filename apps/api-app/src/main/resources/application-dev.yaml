@@ -37,10 +37,27 @@ springdoc:
   swagger-ui:
     path: /swagger-ui.html
 
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${MAIL_USERNAME:}
+    password: ${MAIL_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+
 jwt:
   secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-  expiration-ms: 86400000
-  refresh-expiration-ms: 604800000
+  expiration-ms: 3600000
+  refresh-expiration-ms: 2592000000
+
+app:
+  super-admin:
+    email: ${SUPER_ADMIN_EMAIL:admin@biniyogbuddy.com}
+    password: ${SUPER_ADMIN_PASSWORD:admin123}
 
 logging:
   level:

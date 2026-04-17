@@ -10,6 +10,7 @@ import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
+import java.util.UUID;
 
 @Component
 public class JwtUtil {
@@ -38,8 +39,9 @@ public class JwtUtil {
     private String buildToken(User user, long expirationMs, String tokenType) {
         return Jwts.builder()
                 .subject(user.getEmail())
+                .id(UUID.randomUUID().toString())
                 .claim("userId", user.getId())
-                .claim("role", user.getRole().name())
+                .claim("roleId", user.getRole().getId())
                 .claim("tokenType", tokenType)
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationMs))
@@ -59,6 +61,22 @@ public class JwtUtil {
         return extractClaims(token).getSubject();
     }
 
+    public String extractJti(String token) {
+        return extractClaims(token).getId();
+    }
+
+    public Long extractUserId(String token) {
+        return extractClaims(token).get("userId", Long.class);
+    }
+
+    public Long extractRoleId(String token) {
+        return extractClaims(token).get("roleId", Long.class);
+    }
+
+    public String extractTokenType(String token) {
+        return extractClaims(token).get("tokenType", String.class);
+    }
+
     public Date getExpiration(String token) {
         return extractClaims(token).getExpiration();
     }
@@ -72,8 +90,8 @@ public class JwtUtil {
         }
     }
 
-    public String extractTokenType(String token) {
-        return extractClaims(token).get("tokenType", String.class);
+    public long getExpirationMs() {
+        return expirationMs;
     }
 
     public long getRefreshExpirationMs() {

@@ -3,11 +3,18 @@ package com.biniyogbuddy.api.controller.auth;
 import com.biniyogbuddy.auth.dto.AuthLoginRequest;
 import com.biniyogbuddy.auth.dto.AuthRegisterRequest;
 import com.biniyogbuddy.auth.dto.AuthResponse;
+import com.biniyogbuddy.auth.dto.ForgotPasswordRequest;
 import com.biniyogbuddy.auth.dto.LogoutRequest;
 import com.biniyogbuddy.auth.dto.RefreshTokenRequest;
+import com.biniyogbuddy.auth.dto.ResendOtpRequest;
+import com.biniyogbuddy.auth.dto.ResetPasswordRequest;
+import com.biniyogbuddy.auth.dto.ResetTokenResponse;
+import com.biniyogbuddy.auth.dto.VerifyForgotPasswordRequest;
+import com.biniyogbuddy.auth.dto.VerifyOtpRequest;
 import com.biniyogbuddy.auth.service.AuthService;
-import com.biniyogbuddy.common.dto.ApiResponse;
+import com.biniyogbuddy.auth.util.JwtUtil;
 import com.biniyogbuddy.common.config.MessageResource;
+import com.biniyogbuddy.common.dto.ApiResponse;
 import com.biniyogbuddy.common.dto.MessageResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -26,13 +33,19 @@ public class AuthController {
 
     private final AuthService authService;
     private final MessageResource messageResource;
+    private final JwtUtil jwtUtil;
 
     @PostMapping("/register")
-    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody AuthRegisterRequest request) {
-        AuthResponse authResponse = authService.register(request);
-        String message = messageResource.getMessage("auth.register.success");
-        return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiResponse<>(message, "success", authResponse));
+    public ResponseEntity<MessageResponse> register(@Valid @RequestBody AuthRegisterRequest request) {
+        MessageResponse response = authService.register(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(response);
+    }
+
+    @PostMapping("/verify-registration")
+    public ResponseEntity<ApiResponse<AuthResponse>> verifyRegistration(@Valid @RequestBody VerifyOtpRequest request) {
+        AuthResponse authResponse = authService.verifyRegistration(request.email(), request.otp());
+        String message = messageResource.getMessage("auth.verify.registration.success");
+        return ResponseEntity.ok(new ApiResponse<>(message, "success", authResponse));
     }
 
     @PostMapping("/login")
@@ -44,7 +57,8 @@ public class AuthController {
 
     @PostMapping("/refresh")
     public ResponseEntity<ApiResponse<AuthResponse>> refresh(@Valid @RequestBody RefreshTokenRequest request) {
-        AuthResponse authResponse = authService.refresh(request.refreshToken());
+        Long userId = jwtUtil.extractUserId(request.refreshToken());
+        AuthResponse authResponse = authService.refresh(userId, request.refreshToken());
         String message = messageResource.getMessage("auth.refresh.success");
         return ResponseEntity.ok(new ApiResponse<>(message, "success", authResponse));
     }
@@ -55,5 +69,31 @@ public class AuthController {
         authService.logout(accessToken, logoutRequest.refreshToken());
         String message = messageResource.getMessage("auth.logout.success");
         return ResponseEntity.ok(new MessageResponse(message));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(@Valid @RequestBody ForgotPasswordRequest request) {
+        MessageResponse response = authService.forgotPassword(request.email());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/verify-forgot-password")
+    public ResponseEntity<ApiResponse<ResetTokenResponse>> verifyForgotPassword(@Valid @RequestBody VerifyForgotPasswordRequest request) {
+        ResetTokenResponse resetTokenResponse = authService.verifyForgotPassword(request.email(), request.otp());
+        String message = messageResource.getMessage("auth.verify.forgot.password.success");
+        return ResponseEntity.ok(new ApiResponse<>(message, "success", resetTokenResponse));
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<ApiResponse<AuthResponse>> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
+        AuthResponse authResponse = authService.resetPassword(request);
+        String message = messageResource.getMessage("auth.reset.password.success");
+        return ResponseEntity.ok(new ApiResponse<>(message, "success", authResponse));
+    }
+
+    @PostMapping("/resend-otp")
+    public ResponseEntity<MessageResponse> resendOtp(@Valid @RequestBody ResendOtpRequest request) {
+        MessageResponse response = authService.resendOtp(request.email(), request.type());
+        return ResponseEntity.ok(response);
     }
 }
