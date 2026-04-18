@@ -1,9 +1,9 @@
 spring:
   datasource:
-    url: jdbc:postgresql://localhost:5432/biniyogbuddy
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/biniyogbuddy}
     driver-class-name: org.postgresql.Driver
-    username: postgres
-    password: mbstusiam
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:mbstusiam}
 
   jpa:
     database-platform: org.hibernate.dialect.PostgreSQLDialect
@@ -17,25 +17,14 @@ spring:
 
   data:
     redis:
-      host: localhost
-      port: 6379
-      password: strongpassword123
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:strongpassword123}
       lettuce:
         pool:
           max-active: 10
           max-idle: 5
           min-idle: 2
-
-server:
-  port: 8080
-  servlet:
-    context-path: /
-
-springdoc:
-  api-docs:
-    path: /v3/api-docs
-  swagger-ui:
-    path: /swagger-ui.html
 
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
@@ -49,10 +38,21 @@ springdoc:
           starttls:
             enable: true
 
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
 jwt:
-  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-  expiration-ms: 3600000
-  refresh-expiration-ms: 2592000000
+  secret: ${JWT_SECRET:404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970}
+  expiration-ms: ${JWT_EXPIRATION_MS:3600000}
+  refresh-expiration-ms: ${JWT_REFRESH_EXPIRATION_MS:2592000000}
 
 app:
   super-admin:
