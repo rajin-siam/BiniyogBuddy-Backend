@@ -1,42 +1,65 @@
 package com.biniyogbuddy.stocks.entity;
 
-import com.biniyogbuddy.common.entity.BaseEntity;
-import com.biniyogbuddy.users.entity.User;
 import jakarta.persistence.*;
-import lombok.*;
-import lombok.experimental.SuperBuilder;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "stock_prices", indexes = {
-        @Index(name = "idx_stock_prices_stock_id", columnList = "stock_id"),
-        @Index(name = "idx_stock_prices_user_id", columnList = "user_id")
-})
+@Table(name = "stock_prices")
 @Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
-@SuperBuilder
-public class StockPrice extends BaseEntity {
+@Builder
+public class StockPrice {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "stock_price_seq_gen")
-    @SequenceGenerator(name = "stock_price_seq_gen", sequenceName = "stock_price_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "stock_id", nullable = false)
+    @OneToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "stock_id", unique = true, nullable = false)
     private Stock stock;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
+    // Prices
+    private BigDecimal ltp;              // last traded price
+    @Column(name = "open_price")
+    private BigDecimal openPrice;
+    private BigDecimal high;
+    private BigDecimal low;
+    @Column(name = "close_price")
+    private BigDecimal closePrice;
+    @Column(name = "yesterday_close")
+    private BigDecimal yesterdayClose;
 
-    @Column(nullable = false, precision = 12, scale = 2)
-    private BigDecimal price;
+    // Change
+    private BigDecimal change;
+    @Column(name = "change_pct", precision = 10, scale = 4)
+    private BigDecimal changePct;
 
-    @Column(name = "price_date", nullable = false)
-    private LocalDate priceDate;
+    // Volume
+    private Long volume;
+    @Column(name = "value_mn", precision = 18, scale = 4)
+    private BigDecimal valueMn;          // turnover in millions BDT
+    private Integer trades;
+
+    // Extra stats (may be null — scraped separately)
+    @Column(name = "week_52_high")
+    private BigDecimal week52High;
+    @Column(name = "week_52_low")
+    private BigDecimal week52Low;
+    @Column(name = "floor_price")
+    private BigDecimal floorPrice;
+    @Column(name = "circuit_up")
+    private BigDecimal circuitUp;
+    @Column(name = "circuit_down")
+    private BigDecimal circuitDown;
+
+    @Column(name = "fetched_at", nullable = false)
+
+    private LocalDateTime fetchedAt;
 }
