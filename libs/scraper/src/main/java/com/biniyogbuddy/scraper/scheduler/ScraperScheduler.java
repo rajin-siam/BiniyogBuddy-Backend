@@ -18,11 +18,15 @@ public class ScraperScheduler {
 
     // Runs immediately on startup (initialDelay = 0), then every hour after
     // each run completes (fixedDelay = 3_600_000 ms).
-    @Scheduled(initialDelay = 0, fixedDelay = 3_600_000)
+    @Scheduled(initialDelay = 15_000, fixedDelay = 3_600_000)
     public void scrapeAndIngest() {
         log.info("Scrape job started");
-        ScrapedPage page = fetcher.fetchLivePrices();
-        ingestionService.ingest(page);
-        log.info("Scrape job finished");
+        try {
+            ScrapedPage page = fetcher.fetchLivePrices();
+            ingestionService.ingest(page);
+            log.info("Scrape job finished");
+        } catch (Exception e) {
+            log.error("Scrape job failed: {}", e.getMessage(), e);
+        }
     }
 }

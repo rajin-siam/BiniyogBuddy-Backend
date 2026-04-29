@@ -76,9 +76,10 @@ public class DsePriceFetcher {
 
     private ScrapedPage doFetch(long start) {
         try (Playwright playwright = Playwright.create()) {
-            Browser browser = playwright.chromium().launch(
-                    new BrowserType.LaunchOptions().setHeadless(true)
-            );
+            java.nio.file.Path chromiumPath = resolveChromiumPath();
+            BrowserType.LaunchOptions launchOptions = new BrowserType.LaunchOptions().setHeadless(true);
+            if (chromiumPath != null) launchOptions.setExecutablePath(chromiumPath);
+            Browser browser = playwright.chromium().launch(launchOptions);
 
             // Page 1 — stock prices
             Document pricePage  = fetchPage(browser, props.getPriceUrl());
@@ -274,6 +275,19 @@ public class DsePriceFetcher {
                 .declines(declines)
                 .unchanged(unchanged)
                 .build();
+    }
+
+    private java.nio.file.Path resolveChromiumPath() {
+        String[] candidates = {"/usr/bin/chromium", "/usr/bin/chromium-browser", "/usr/bin/google-chrome"};
+        for (String path : candidates) {
+            java.io.File f = new java.io.File(path);
+            if (f.exists()) {
+                log.info("Using system Chromium: {}", path);
+                return f.toPath();
+            }
+        }
+        log.info("Using Playwright bundled Chromium");
+        return null;
     }
 
     private String textOf(Element parent, String cssSelector, String fallback) {
